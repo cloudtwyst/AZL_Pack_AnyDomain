@@ -113,8 +113,12 @@ function Test-SolpackConfig {
         }
     }
 
-    # ── 3. Semantic checks ───────────────────────────────────────────────────
+    # ── 3. Semantic checks (only when schema is valid) ───────────────────────
     Write-Verbose "Running semantic checks"
+    if ($errorCount -gt 0) {
+        Write-Information "Validation FAILED — $errorCount error(s) found in $Path" -InformationAction Continue
+        return $false
+    }
     $findings = Assert-SemanticRules -Config $config
 
     foreach ($f in $findings) {

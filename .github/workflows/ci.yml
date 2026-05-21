@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pester:
+    name: Pester unit tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install powershell-yaml
+        shell: pwsh
+        run: Install-Module powershell-yaml -Force -Scope CurrentUser
+
+      - name: Install Pester
+        shell: pwsh
+        run: Install-Module Pester -MinimumVersion 5.0 -Force -Scope CurrentUser
+
+      - name: Run Pester
+        shell: pwsh
+        run: |
+          $cfg = . ./tests/pester.config.ps1
+          Invoke-Pester -Configuration $cfg
+
+      - name: Publish test results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: test-results/pester.xml
+
+  psscriptanalyzer:
+    name: PSScriptAnalyzer
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: Install-Module PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Analyze solpack module
+        shell: pwsh
+        run: |
+          $results = Invoke-ScriptAnalyzer -Path ./solpack -Recurse -Severity Error,Warning
+          if ($results) {
+            $results | Format-Table -AutoSize
+            exit 1
+          }
+
+  terraform-validate:
+    name: Terraform validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "~1.6"
+
+      - name: Validate each module
+        run: |
+          set -e
+          for dir in terraform-modules/*/; do
+            echo "--- validating $dir ---"
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" validate
+          done
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: terraform-linters/setup-tflint@v4
+        with:
+          tflint_version: latest
+
+      - name: Init tflint (azurerm plugin)
+        run: tflint --init
+
+      - name: Run tflint on all modules
+        run: |
+          set -e
+          for dir in terraform-modules/*/; do
+            echo "--- tflint $dir ---"
+            tflint --chdir="$dir" --format=compact
+          done
+
+  schema-validation:
+    name: Schema validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install powershell-yaml
+        shell: pwsh
+        run: Install-Module powershell-yaml -Force -Scope CurrentUser
+
+      - name: Validate all fixture configs
+        shell: pwsh
+        run: |
+          Import-Module ./solpack/solpack.psm1
+          $fixtures = Get-ChildItem ./tests/fixtures -Filter customer-config.yaml -Recurse
+          $failed = 0
+          foreach ($f in $fixtures) {
+            $result = Test-SolpackConfig -Path $f.FullName -PassThru
+            if (-not $result) {
+              Write-Error "FAILED: $($f.FullName)"
+              $failed++
+            } else {
+              Write-Host "OK: $($f.FullName)"
+            }
+          }
+          if ($failed -gt 0) { exit 1 }
