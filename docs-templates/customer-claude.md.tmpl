@@ -1,0 +1,61 @@
+# CLAUDE.md — instructions for Claude Code
+
+This file is read automatically by `claude` (Claude Code) when it starts in this directory.
+It tells Claude how to work on **this** project. The full build plan lives in `PLAN.md`.
+
+## Project at a glance
+
+We are standing up an **Azure secure landing zone** governed by **Enterprise Policy as
+Code (EPAC)** from GitHub, with a **DINE-driven monitoring pipeline** sending logs to a
+**SIEM**, wrapped in a **secure solution lifecycle** that gates new Azure services
+through Infosec review.
+
+The blueprint is `PLAN.md`. Always read it before suggesting changes that span phases.
+
+## Working agreement
+
+1. **Phase discipline.** `PLAN.md` is organised into Phases 0 → 8. Don't start Phase
+   N+1 until Phase N's verification step passes. If I ask you to skip ahead, push back
+   and ask which prerequisite I'm bypassing and why.
+2. **Ask before destructive Azure operations.** Anything that uses `az ... delete`,
+   `Remove-*`, or `Deploy-PolicyPlan.ps1` against a non-`epac-dev` environment requires
+   me to confirm in chat first. Always run `--what-if` / `-WhatIf` first when available.
+3. **Idempotency is non-negotiable.** Every Bicep/Terraform/PowerShell script you
+   write must be safe to re-run. If you can't make it idempotent, flag it explicitly.
+4. **Open decisions live in `decisions.md`.** When I make a call from §2 of `PLAN.md`,
+   append it there with the date. When you hit a question I haven't answered, ask me,
+   then record the answer there.
+5. **Secrets stay out of git.** Use GitHub OIDC federation for the EPAC service
+   principals (Phase 4). If you're about to write a `client_secret` anywhere, stop.
+6. **Tenant scoping.** Always read `decisions.md` for the active tenant ID and the
+   target MG before generating commands. Never hard-code GUIDs from examples; use
+   placeholders or `decisions.md` values.
+
+## Repo conventions
+
+- IaC for the bootstrap repo: see decision **D2** in `PLAN.md` (Bicep by default).
+- Policies, initiatives, assignments, exemptions: JSONC under `Definitions/` per
+  upstream EPAC layout. Don't reinvent the folder structure.
+- Workflows: under `.github/workflows/`. One per `pacEnvironment` (see Phase 5).
+- Docs: under `docs/`. One Markdown file per topic. Use kebab-case filenames.
+
+## Style
+
+- Bicep > ARM JSON. Terraform only if `decisions.md` says so.
+- PowerShell scripts: `pwsh`-compatible (7.x), not Windows PowerShell. Use approved
+  verbs. Always parameterise; never inline tenant or subscription IDs.
+- Markdown: tight, scannable, no marketing language. Tables for option lists.
+
+## Verification protocol
+
+Before declaring a phase complete:
+1. Run the verification command from `PLAN.md` for that phase.
+2. Paste the output (redacted where needed) into the chat for me to sanity-check.
+3. Only then update `decisions.md` with "Phase N: complete YYYY-MM-DD".
+
+## When in doubt
+
+- Re-read the relevant section of `PLAN.md`.
+- Check the diagrams under `reference/diagrams/` (the source `.vsdx` and `.drawio`
+  files I uploaded).
+- Ask me. A short clarifying question is always better than a long wrong PR.
