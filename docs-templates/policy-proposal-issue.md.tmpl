@@ -1,0 +1,86 @@
+---
+name: Policy Control Proposal
+about: Propose a new or changed security control for this tenant
+title: "[Policy] <Short description>"
+labels: policy-proposal, infosec-review
+assignees: ""
+---
+
+<!-- Rendered by solpack from docs-templates/policy-proposal-issue.md.tmpl -->
+<!-- Customer: {{CUSTOMER_NAME}} | Pack: {{PACK_VERSION}} -->
+
+## Problem statement
+
+**What risk or compliance gap does this control address?**
+
+**Affected resources or services:**
+
+---
+
+## Proposed control
+
+**Policy effect:**
+- [ ] Audit
+- [ ] AuditIfNotExists
+- [ ] Deny
+- [ ] DeployIfNotExists (DINE)
+- [ ] Modify
+
+**Scope:**
+- [ ] Root management group (all subscriptions)
+- [ ] Specific management group: <!-- name -->
+- [ ] Specific subscription: <!-- ID -->
+
+**Proposed policy name / ID:**
+<!-- Use the existing catalog name if referencing an existing policy -->
+
+**Is this a built-in Azure Policy or a custom definition?**
+- [ ] Built-in (provide display name and ID)
+- [ ] Custom (provide draft JSONC below)
+
+<details>
+<summary>Draft policy JSONC (if custom)</summary>
+
+```jsonc
+// paste here
+```
+</details>
+
+---
+
+## Compliance framework mapping
+
+| Framework | Control ID | Description |
+|-----------|-----------|-------------|
+| <!-- e.g. CIS Azure 2.0 --> | <!-- e.g. 4.1.1 --> | <!-- e.g. Ensure... --> |
+
+---
+
+## Impact assessment
+
+**Estimated number of currently non-compliant resources:**
+
+**Will a `Deny` effect block any legitimate current workloads?**
+- [ ] No
+- [ ] Yes — describe:
+
+**Remediation path for existing non-compliant resources:**
+
+**Required exemptions (if any):**
+
+---
+
+## Testing plan
+
+- [ ] Deployed to epac-dev and observed compliant/non-compliant as expected.
+- [ ] A `Deny` effect was confirmed not to block a known-good deployment.
+- [ ] Remediation task tested (for DINE policies).
+
+---
+
+## Review
+
+/cc {{INFOSEC_REVIEWERS}}
+
+InfoSec team: please review within 5 business days.
+Follow the [controls development process](../handover/controls-development-process.md) for approval steps.

@@ -123,7 +123,57 @@ function Build-SolpackRepo {
                            -DefinitionsPath "$RepoPath\Definitions" `
                            -SubstitutionMap $subMap
 
+    # 8. Lifecycle artifacts (CODEOWNERS + issue templates)
+    if ($config['lifecycle']['enableServiceRequestFlow']) {
+        Build-LifecycleArtifacts -Config $config `
+                                 -PackRoot $PackRoot `
+                                 -RepoPath $RepoPath `
+                                 -SubstitutionMap $subMap
+    }
+
     Write-Information "Render complete: $RepoPath" -InformationAction Continue
+}
+
+function Build-LifecycleArtifacts {
+    param(
+        [hashtable] $Config,
+        [string] $PackRoot,
+        [string] $RepoPath,
+        [System.Collections.Specialized.OrderedDictionary] $SubstitutionMap
+    )
+
+    $reviewers = $Config['lifecycle']['infosecReviewers'] ?? @()
+
+    # CODEOWNERS
+    $coPath = "$RepoPath\CODEOWNERS"
+    $coLines = [System.Collections.Generic.List[string]]::new()
+    $coLines.Add('# CODEOWNERS — managed by solpack render.')
+    $coLines.Add("# Re-run 'solpack render' to regenerate from customer-config.yaml.")
+    $coLines.Add('')
+    foreach ($rev in $reviewers) {
+        $coLines.Add("Definitions/  $rev")
+        $coLines.Add("handover/      $rev")
+    }
+    $coContent = $coLines -join "`n"
+    $existing = if (Test-Path $coPath) { (Get-Content $coPath -Raw -Encoding utf8).TrimEnd("`r","`n") } else { $null }
+    if ($coContent.TrimEnd("`r","`n") -ne $existing) {
+        Set-Content $coPath -Value $coContent -Encoding utf8
+        Write-Verbose "  wrote CODEOWNERS"
+    }
+
+    # GitHub issue templates
+    $issueTmplDir = "$RepoPath\.github\ISSUE_TEMPLATE"
+    New-Item -ItemType Directory -Force -Path $issueTmplDir | Out-Null
+
+    $docsTmplDir = Join-Path $PackRoot 'docs-templates'
+    foreach ($issueTmpl in @('service-request-issue.md.tmpl', 'policy-proposal-issue.md.tmpl')) {
+        $srcPath = Join-Path $docsTmplDir $issueTmpl
+        if (-not (Test-Path -LiteralPath $srcPath)) { continue }
+        $outName = $issueTmpl -replace '\.tmpl$', ''
+        Invoke-TemplateRender -TemplatePath $srcPath `
+                              -OutputPath "$issueTmplDir\$outName" `
+                              -SubstitutionMap $SubstitutionMap | Out-Null
+    }
 }
 
 # ── Private helpers (build-time; not exported) ─────────────────────────────
