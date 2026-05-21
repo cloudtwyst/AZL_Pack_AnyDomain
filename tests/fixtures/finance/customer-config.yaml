@@ -1,0 +1,62 @@
+schemaVersion: "1.0"
+packVersion: ">=0.1.0,<2.0.0"
+
+customer:
+  name: "Northwind Bank"
+  shortCode: "nwbank"
+  industry: "finance"
+  primaryContact: "cloudops@northwindbank.example.com"
+
+deployment:
+  mode: "self-service"
+  github:
+    org: "northwindbank-platform"
+    repoName: "northwindbank-azure-platform"
+    visibility: "private"
+  approval:
+    nonprod: true
+    prod: true
+
+azure:
+  tenantId: "10000000-0000-0000-0000-000000000003"
+  managementSubscriptionId: "20000000-0000-0000-0000-000000000003"
+  regions:
+    primary: "uksouth"
+    secondary:
+      - "ukwest"
+  managementGroups:
+    layout: "caf"
+    rootPrefix: "nwbank"
+    customTree: null
+
+monitoring:
+  siem: "splunk"
+  logAnalytics:
+    topology: "per-region"
+  eventHub:
+    enabled: true
+    maxThroughputUnits: 20
+
+policy:
+  pacOwnerIdSeed: "nwbank-finance-2025"
+  desiredStateStrategy: "ownedOnly"
+  initiatives:
+    baseline: true
+    industry:
+      - "finance"
+    frameworks:
+      - "pci-dss-4.0"
+      - "iso-27001"
+      - "cis-azure-2.0"
+      - "nist-800-53"
+
+lifecycle:
+  enableServiceRequestFlow: true
+  infosecReviewers:
+    - "@northwindbank/infosec"
+    - "@northwindbank/cloud-security"
+  approvedServicesSeed: "minimal"
+
+handover:
+  generateRunbooks: true
+  trainingSessions: 3

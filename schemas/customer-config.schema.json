@@ -1,0 +1,324 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "customer-config.schema.json",
+  "title": "SolutionPack Customer Configuration",
+  "description": "Validates customer-config.yaml before solpack validate/render/deploy.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "packVersion",
+    "customer",
+    "deployment",
+    "azure",
+    "monitoring",
+    "policy",
+    "lifecycle",
+    "handover"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Config schema version. Additive changes bump minor; breaking changes bump major.",
+      "pattern": "^\\d+\\.\\d+$",
+      "examples": ["1.0"]
+    },
+    "packVersion": {
+      "type": "string",
+      "description": "Semver range this config requires, e.g. '>=1.0.0,<2.0.0'.",
+      "minLength": 1
+    },
+    "customer": {
+      "type": "object",
+      "description": "Customer identity used to name resources and select policy initiatives.",
+      "required": ["name", "shortCode", "industry", "primaryContact"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Human-readable customer name, e.g. 'Contoso Healthcare'."
+        },
+        "shortCode": {
+          "type": "string",
+          "description": "Lowercase alphanumeric, max 8 chars. Used as a prefix in resource names.",
+          "pattern": "^[a-z0-9]{1,8}$"
+        },
+        "industry": {
+          "type": "string",
+          "description": "Unlocks industry-specific policy initiatives.",
+          "enum": ["finance", "healthcare", "public-sector", "retail", "other"]
+        },
+        "primaryContact": {
+          "type": "string",
+          "description": "Email address for the primary ops contact.",
+          "format": "email"
+        }
+      }
+    },
+    "deployment": {
+      "type": "object",
+      "required": ["mode", "github", "approval"],
+      "additionalProperties": false,
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "'managed' = your team runs it; 'self-service' = customer runs it.",
+          "enum": ["managed", "self-service"]
+        },
+        "github": {
+          "type": "object",
+          "description": "GitHub org and repo where the rendered customer platform repo lives.",
+          "required": ["org", "repoName", "visibility"],
+          "additionalProperties": false,
+          "properties": {
+            "org": {
+              "type": "string",
+              "minLength": 1
+            },
+            "repoName": {
+              "type": "string",
+              "minLength": 1
+            },
+            "visibility": {
+              "type": "string",
+              "enum": ["private", "internal", "public"]
+            }
+          }
+        },
+        "approval": {
+          "type": "object",
+          "description": "Required approval gates on PR merges.",
+          "required": ["prod"],
+          "additionalProperties": false,
+          "properties": {
+            "nonprod": {
+              "type": "boolean",
+              "default": false,
+              "description": "Gate non-prod merges with a required reviewer."
+            },
+            "prod": {
+              "type": "boolean",
+              "const": true,
+              "description": "Always true — prod merges always require approval."
+            }
+          }
+        }
+      }
+    },
+    "azure": {
+      "type": "object",
+      "required": ["tenantId", "managementSubscriptionId", "regions", "managementGroups"],
+      "additionalProperties": false,
+      "properties": {
+        "tenantId": {
+          "type": "string",
+          "description": "Azure AD tenant GUID.",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "managementSubscriptionId": {
+          "type": "string",
+          "description": "Subscription that hosts the Log Analytics workspace and Event Hub backbone.",
+          "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        },
+        "regions": {
+          "type": "object",
+          "required": ["primary"],
+          "additionalProperties": false,
+          "properties": {
+            "primary": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Primary Azure region, e.g. 'westeurope'."
+            },
+            "secondary": {
+              "type": "array",
+              "description": "Optional additional regions for redundant Log Analytics workspaces.",
+              "items": { "type": "string", "minLength": 1 },
+              "uniqueItems": true
+            }
+          }
+        },
+        "managementGroups": {
+          "type": "object",
+          "required": ["layout", "rootPrefix"],
+          "additionalProperties": false,
+          "properties": {
+            "layout": {
+              "type": "string",
+              "description": "'caf' uses the standard CAF hierarchy; 'flat' puts all subs under root; 'custom' requires customTree.",
+              "enum": ["caf", "flat", "custom"]
+            },
+            "rootPrefix": {
+              "type": "string",
+              "description": "Prefix for top-level management group names, e.g. 'contoso'.",
+              "pattern": "^[a-z0-9-]{1,24}$"
+            },
+            "customTree": {
+              "description": "Required when layout=custom. Object describing the MG hierarchy.",
+              "type": ["object", "null"]
+            }
+          },
+          "if": {
+            "properties": { "layout": { "const": "custom" } },
+            "required": ["layout"]
+          },
+          "then": {
+            "properties": {
+              "customTree": { "type": "object" }
+            },
+            "required": ["customTree"]
+          }
+        }
+      }
+    },
+    "monitoring": {
+      "type": "object",
+      "required": ["siem", "logAnalytics", "eventHub"],
+      "additionalProperties": false,
+      "properties": {
+        "siem": {
+          "type": "string",
+          "description": "SIEM that consumes Event Hub. 'sentinel' may allow eventHub.enabled=false.",
+          "enum": ["sentinel", "splunk", "elastic", "sumo", "custom"]
+        },
+        "logAnalytics": {
+          "type": "object",
+          "required": ["topology"],
+          "additionalProperties": false,
+          "properties": {
+            "topology": {
+              "type": "string",
+              "description": "How many Log Analytics workspaces to deploy.",
+              "enum": ["per-region", "per-continent", "global"]
+            }
+          }
+        },
+        "eventHub": {
+          "type": "object",
+          "required": ["enabled"],
+          "additionalProperties": false,
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Deploy Event Hub namespace for SIEM ingestion."
+            },
+            "maxThroughputUnits": {
+              "type": "integer",
+              "description": "Auto-inflate cap. Ignored when enabled=false.",
+              "minimum": 1,
+              "maximum": 40
+            }
+          }
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "required": ["pacOwnerIdSeed", "desiredStateStrategy", "initiatives"],
+      "additionalProperties": false,
+      "properties": {
+        "pacOwnerIdSeed": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Arbitrary string used to derive a deterministic GUID for EPAC pacOwnerId."
+        },
+        "desiredStateStrategy": {
+          "type": "string",
+          "description": "'ownedOnly' only manages policies with this repo's pacOwnerId. 'full' deletes all unowned policies — use with caution.",
+          "enum": ["ownedOnly", "full"]
+        },
+        "initiatives": {
+          "type": "object",
+          "required": ["baseline"],
+          "additionalProperties": false,
+          "properties": {
+            "baseline": {
+              "type": "boolean",
+              "const": true,
+              "description": "Baseline initiative is always assigned to every customer."
+            },
+            "industry": {
+              "type": "array",
+              "description": "Industry-specific initiatives to assign.",
+              "items": {
+                "type": "string",
+                "enum": ["finance", "healthcare", "public-sector", "retail"]
+              },
+              "uniqueItems": true
+            },
+            "frameworks": {
+              "type": "array",
+              "description": "Compliance framework initiatives to assign.",
+              "items": {
+                "type": "string",
+                "enum": ["hipaa", "iso-27001", "cis-azure-2.0", "pci-dss-4.0", "nist-800-53"]
+              },
+              "uniqueItems": true
+            },
+            "exclusions": {
+              "type": "array",
+              "description": "Management group scopes exempt from this repo's policy assignments.",
+              "items": {
+                "type": "object",
+                "required": ["scope", "reason"],
+                "additionalProperties": false,
+                "properties": {
+                  "scope": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Full ARM scope path, e.g. '/providers/Microsoft.Management/managementGroups/...'."
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Human-readable justification for the exclusion."
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": ["enableServiceRequestFlow", "infosecReviewers", "approvedServicesSeed"],
+      "additionalProperties": false,
+      "properties": {
+        "enableServiceRequestFlow": {
+          "type": "boolean",
+          "description": "Generate GitHub issue templates for the service request / Infosec-review flow."
+        },
+        "infosecReviewers": {
+          "type": "array",
+          "description": "GitHub team or user handles set as CODEOWNERS for approved-* paths.",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        },
+        "approvedServicesSeed": {
+          "type": "string",
+          "description": "'minimal' seeds a short list of core services; 'broad' seeds a larger opinionated list; 'custom' starts empty.",
+          "enum": ["minimal", "broad", "custom"]
+        }
+      }
+    },
+    "handover": {
+      "type": "object",
+      "required": ["generateRunbooks", "trainingSessions"],
+      "additionalProperties": false,
+      "properties": {
+        "generateRunbooks": {
+          "type": "boolean",
+          "description": "Include operational runbooks in the handover bundle."
+        },
+        "trainingSessions": {
+          "type": "integer",
+          "description": "Number of training sessions to include in the onboarding plan.",
+          "minimum": 0,
+          "maximum": 10
+        }
+      }
+    }
+  }
+}

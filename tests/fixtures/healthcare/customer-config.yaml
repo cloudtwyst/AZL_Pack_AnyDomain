@@ -1,0 +1,63 @@
+schemaVersion: "1.0"
+packVersion: ">=0.1.0,<2.0.0"
+
+customer:
+  name: "Contoso Healthcare"
+  shortCode: "contoso"
+  industry: "healthcare"
+  primaryContact: "ops@contoso.example.com"
+
+deployment:
+  mode: "managed"
+  github:
+    org: "contoso-platform"
+    repoName: "contoso-azure-platform"
+    visibility: "private"
+  approval:
+    nonprod: false
+    prod: true
+
+azure:
+  tenantId: "10000000-0000-0000-0000-000000000002"
+  managementSubscriptionId: "20000000-0000-0000-0000-000000000002"
+  regions:
+    primary: "westeurope"
+    secondary:
+      - "northeurope"
+  managementGroups:
+    layout: "caf"
+    rootPrefix: "contoso"
+    customTree: null
+
+monitoring:
+  siem: "splunk"
+  logAnalytics:
+    topology: "per-continent"
+  eventHub:
+    enabled: true
+    maxThroughputUnits: 10
+
+policy:
+  pacOwnerIdSeed: "contoso-healthcare-2025"
+  desiredStateStrategy: "ownedOnly"
+  initiatives:
+    baseline: true
+    industry:
+      - "healthcare"
+    frameworks:
+      - "hipaa"
+      - "iso-27001"
+      - "cis-azure-2.0"
+    exclusions:
+      - scope: "/providers/Microsoft.Management/managementGroups/contoso-research"
+        reason: "Research MG is governed by university policy outside our remit."
+
+lifecycle:
+  enableServiceRequestFlow: true
+  infosecReviewers:
+    - "@contoso/infosec-team"
+  approvedServicesSeed: "minimal"
+
+handover:
+  generateRunbooks: true
+  trainingSessions: 2

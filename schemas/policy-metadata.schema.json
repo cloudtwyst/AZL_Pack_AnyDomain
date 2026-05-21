@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "policy-metadata.schema.json",
+  "title": "Policy Catalog Metadata",
+  "description": "Required metadata block on every policy definition and initiative JSONC file. Every policy must cite at least one published framework — no bespoke policies in the catalog.",
+  "type": "object",
+  "required": ["industry", "frameworks", "severity", "references"],
+  "additionalProperties": false,
+  "properties": {
+    "industry": {
+      "type": "array",
+      "description": "Industries this policy applies to. Use ['all'] if universal.",
+      "items": {
+        "type": "string",
+        "enum": ["all", "finance", "healthcare", "public-sector", "retail"]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "frameworks": {
+      "type": "array",
+      "description": "Compliance frameworks that cite this control. At least one required.",
+      "items": {
+        "type": "string",
+        "enum": [
+          "hipaa",
+          "iso-27001",
+          "cis-azure-2.0",
+          "pci-dss-4.0",
+          "nist-800-53",
+          "azure-security-benchmark"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "severity": {
+      "type": "string",
+      "description": "Impact severity if this control is violated.",
+      "enum": ["critical", "high", "medium", "low", "informational"]
+    },
+    "references": {
+      "type": "array",
+      "description": "URLs or document IDs from the cited frameworks. At least one required.",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "effect": {
+      "type": "string",
+      "description": "Default Azure Policy effect shipped in this definition.",
+      "enum": ["Audit", "AuditIfNotExists", "Deny", "DeployIfNotExists", "Disabled", "Modify"]
+    },
+    "remediable": {
+      "type": "boolean",
+      "description": "True if a remediation task can automatically fix non-compliant resources."
+    }
+  }
+}

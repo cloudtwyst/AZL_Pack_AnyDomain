@@ -1,0 +1,51 @@
+schemaVersion: "1.0"
+packVersion: ">=0.1.0,<2.0.0"
+
+customer:
+  name: "Fabrikam"
+  shortCode: "fabrikam"
+  industry: "other"
+  primaryContact: "ops@fabrikam.example.com"
+
+deployment:
+  mode: "self-service"
+  github:
+    org: "fabrikam-platform"
+    repoName: "fabrikam-azure-platform"
+    visibility: "private"
+  approval:
+    nonprod: false
+    prod: true
+
+azure:
+  tenantId: "10000000-0000-0000-0000-000000000001"
+  managementSubscriptionId: "20000000-0000-0000-0000-000000000001"
+  regions:
+    primary: "westeurope"
+  managementGroups:
+    layout: "caf"
+    rootPrefix: "fabrikam"
+    customTree: null
+
+monitoring:
+  siem: "sentinel"
+  logAnalytics:
+    topology: "global"
+  eventHub:
+    enabled: false
+
+policy:
+  pacOwnerIdSeed: "fabrikam-2025"
+  desiredStateStrategy: "ownedOnly"
+  initiatives:
+    baseline: true
+
+lifecycle:
+  enableServiceRequestFlow: false
+  infosecReviewers:
+    - "@fabrikam/infosec"
+  approvedServicesSeed: "minimal"
+
+handover:
+  generateRunbooks: true
+  trainingSessions: 1
