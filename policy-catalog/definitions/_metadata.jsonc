@@ -1,0 +1,28 @@
+// Policy catalog metadata schema reference
+// ─────────────────────────────────────────
+// Every policy definition and initiative MUST include a "pacMetadata" block
+// inside properties.metadata. Fields:
+//
+//   industry    — array, one or more of:
+//                 "all" | "finance" | "healthcare" | "public-sector" | "retail"
+//
+//   frameworks  — array, one or more of:
+//                 "hipaa" | "iso-27001" | "cis-azure-2.0" |
+//                 "pci-dss-4.0" | "nist-800-53" | "azure-security-benchmark"
+//
+//   severity    — one of:
+//                 "critical" | "high" | "medium" | "low" | "informational"
+//
+//   references  — array of strings (URLs or document IDs from the cited framework)
+//
+// Policy entry bar:
+//   Every policy MUST cite at least one published framework in frameworks[].
+//   Bespoke / customer-specific policies belong in the customer repo, not here.
+//
+// Example:
+// "pacMetadata": {
+//     "industry": ["all"],
+//     "frameworks": ["cis-azure-2.0", "azure-security-benchmark"],
+//     "severity": "high",
+//     "references": ["https://www.cisecurity.org/benchmark/azure"]
+// }

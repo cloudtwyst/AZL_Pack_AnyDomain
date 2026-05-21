@@ -1,0 +1,143 @@
+{
+    "name": "sp-diag-settings-deploy-to-law-eh",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Deploy diagnostic settings to Log Analytics workspace and Event Hub",
+        "description": "Deploys diagnostic settings on supported resources to send logs and metrics to the designated Log Analytics workspace and Event Hub (DINE). Auto-remediates non-compliant resources.",
+        "mode": "Indexed",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Monitoring",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "azure-security-benchmark", "cis-azure-2.0" ],
+                "severity": "high",
+                "references": [
+                    "https://learn.microsoft.com/azure/azure-monitor/essentials/diagnostic-settings",
+                    "https://learn.microsoft.com/security/benchmark/azure/security-controls-v3-logging-threat-detection#lt-3-enable-logging-for-security-investigation"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect", "description": "DeployIfNotExists to auto-remediate; Disabled to turn off." },
+                "allowedValues": [ "DeployIfNotExists", "Disabled" ],
+                "defaultValue": "DeployIfNotExists"
+            },
+            "logAnalyticsWorkspaceId": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Log Analytics workspace resource ID",
+                    "description": "Resource ID of the Log Analytics workspace.",
+                    "strongType": "omsWorkspace"
+                }
+            },
+            "eventHubAuthorizationRuleId": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Event Hub authorisation rule resource ID",
+                    "description": "Resource ID of the Event Hub namespace authorisation rule."
+                }
+            },
+            "eventHubName": {
+                "type": "String",
+                "metadata": { "displayName": "Event Hub name" },
+                "defaultValue": "diagnostics"
+            },
+            "diagnosticSettingName": {
+                "type": "String",
+                "metadata": { "displayName": "Diagnostic setting name" },
+                "defaultValue": "solpack-diag"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "field": "type",
+                "in": [
+                    "Microsoft.Compute/virtualMachines",
+                    "Microsoft.KeyVault/vaults",
+                    "Microsoft.Storage/storageAccounts",
+                    "Microsoft.Network/networkSecurityGroups",
+                    "Microsoft.Network/applicationGateways",
+                    "Microsoft.Sql/servers/databases",
+                    "Microsoft.ServiceBus/namespaces",
+                    "Microsoft.EventHub/namespaces",
+                    "Microsoft.Web/sites"
+                ]
+            },
+            "then": {
+                "effect": "[parameters('effect')]",
+                "details": {
+                    "type": "Microsoft.Insights/diagnosticSettings",
+                    "name": "[parameters('diagnosticSettingName')]",
+                    "existenceCondition": {
+                        "allOf": [
+                            {
+                                "field": "Microsoft.Insights/diagnosticSettings/workspaceId",
+                                "equals": "[parameters('logAnalyticsWorkspaceId')]"
+                            },
+                            {
+                                "field": "Microsoft.Insights/diagnosticSettings/eventHubAuthorizationRuleId",
+                                "equals": "[parameters('eventHubAuthorizationRuleId')]"
+                            }
+                        ]
+                    },
+                    "roleDefinitionIds": [
+                        "/providers/microsoft.authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
+                        "/providers/microsoft.authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+                    ],
+                    "deployment": {
+                        "properties": {
+                            "mode": "incremental",
+                            "template": {
+                                "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+                                "contentVersion": "1.0.0.0",
+                                "parameters": {
+                                    "resourceName": { "type": "string" },
+                                    "location": { "type": "string" },
+                                    "logAnalyticsWorkspaceId": { "type": "string" },
+                                    "eventHubAuthorizationRuleId": { "type": "string" },
+                                    "eventHubName": { "type": "string" },
+                                    "diagnosticSettingName": { "type": "string" }
+                                },
+                                "resources": [
+                                    {
+                                        "type": "Microsoft.Insights/diagnosticSettings",
+                                        "apiVersion": "2021-05-01-preview",
+                                        "name": "[concat(parameters('resourceName'), '/', parameters('diagnosticSettingName'))]",
+                                        "properties": {
+                                            "workspaceId": "[parameters('logAnalyticsWorkspaceId')]",
+                                            "eventHubAuthorizationRuleId": "[parameters('eventHubAuthorizationRuleId')]",
+                                            "eventHubName": "[parameters('eventHubName')]",
+                                            "logs": [
+                                                {
+                                                    "categoryGroup": "allLogs",
+                                                    "enabled": true
+                                                }
+                                            ],
+                                            "metrics": [
+                                                {
+                                                    "category": "AllMetrics",
+                                                    "enabled": true
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            },
+                            "parameters": {
+                                "resourceName": { "value": "[field('name')]" },
+                                "location": { "value": "[field('location')]" },
+                                "logAnalyticsWorkspaceId": { "value": "[parameters('logAnalyticsWorkspaceId')]" },
+                                "eventHubAuthorizationRuleId": { "value": "[parameters('eventHubAuthorizationRuleId')]" },
+                                "eventHubName": { "value": "[parameters('eventHubName')]" },
+                                "diagnosticSettingName": { "value": "[parameters('diagnosticSettingName')]" }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

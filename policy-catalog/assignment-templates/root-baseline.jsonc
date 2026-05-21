@@ -1,0 +1,32 @@
+{
+    "nodeName": "/root/",
+    "scope": {
+        "{{TENANT_ID}}": [
+            "/providers/Microsoft.Management/managementGroups/{{ROOT_MG_ID}}"
+        ]
+    },
+    "assignment": {
+        "name": "baseline",
+        "displayName": "Baseline — All Customers",
+        "description": "Pack baseline initiative assigned at root management group. Covers diagnostic settings, tagging, activity log, identity hygiene, and HTTPS-only storage."
+    },
+    "definitionEntry": {
+        "policySetName": "baseline-all-customers"
+    },
+    "parameters": {
+        "logAnalyticsWorkspaceId": { "value": "{{LOG_ANALYTICS_WORKSPACE_ID}}" },
+        "eventHubAuthorizationRuleId": { "value": "{{EVENT_HUB_AUTH_RULE_ID}}" },
+        "eventHubName": { "value": "diagnostics" },
+        "diagEffect": { "value": "DeployIfNotExists" },
+        "taggingEffect": { "value": "Audit" },
+        "activityLogEffect": { "value": "AuditIfNotExists" },
+        "identityEffect": { "value": "Audit" },
+        "storageEffect": { "value": "Audit" }
+    },
+    "pacOwnerId": "{{PAC_OWNER_ID}}",
+    "nonComplianceMessages": [
+        {
+            "message": "Resource is not compliant with the solution pack baseline controls."
+        }
+    ]
+}

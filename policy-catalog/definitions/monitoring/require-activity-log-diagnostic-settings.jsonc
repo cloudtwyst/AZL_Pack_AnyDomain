@@ -1,0 +1,47 @@
+{
+    "name": "sp-require-activity-log-diag",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Require Activity Log diagnostic settings on subscriptions",
+        "description": "Audits subscriptions that do not have a diagnostic setting routing Activity Logs to a Log Analytics workspace.",
+        "mode": "All",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Monitoring",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "cis-azure-2.0", "nist-800-53" ],
+                "severity": "medium",
+                "references": [
+                    "https://learn.microsoft.com/azure/azure-monitor/essentials/activity-log",
+                    "https://www.cisecurity.org/benchmark/azure"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect" },
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ],
+                "defaultValue": "AuditIfNotExists"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "field": "type",
+                "equals": "Microsoft.Resources/subscriptions"
+            },
+            "then": {
+                "effect": "[parameters('effect')]",
+                "details": {
+                    "type": "microsoft.insights/diagnosticSettings",
+                    "existenceScope": "subscription",
+                    "existenceCondition": {
+                        "field": "microsoft.insights/diagnosticSettings/workspaceId",
+                        "exists": true
+                    }
+                }
+            }
+        }
+    }
+}

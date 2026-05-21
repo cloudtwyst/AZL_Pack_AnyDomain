@@ -1,0 +1,52 @@
+{
+    "name": "industry-healthcare",
+    "type": "Microsoft.Authorization/policySetDefinitions",
+    "properties": {
+        "displayName": "Industry — Healthcare",
+        "description": "Additional controls for healthcare customers covering MFA enforcement, data encryption at rest, VM backup, and HTTPS-only storage — aligned with HIPAA and ISO 27001.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Healthcare"
+        },
+        "parameters": {
+            "mfaEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "tdeEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "backupEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            }
+        },
+        "policyDefinitions": [
+            {
+                "policyDefinitionReferenceId": "requireMfaPrivilegedRoles",
+                "policyDefinitionName": "sp-require-mfa-privileged-roles",
+                "parameters": {
+                    "effect": { "value": "[parameters('mfaEffect')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "requireSqlTde",
+                "policyDefinitionName": "sp-require-sql-tde",
+                "parameters": {
+                    "effect": { "value": "[parameters('tdeEffect')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "requireVmBackup",
+                "policyDefinitionName": "sp-require-vm-backup",
+                "parameters": {
+                    "effect": { "value": "[parameters('backupEffect')]" }
+                }
+            }
+        ]
+    }
+}

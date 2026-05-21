@@ -1,0 +1,66 @@
+{
+    "name": "framework-hipaa",
+    "type": "Microsoft.Authorization/policySetDefinitions",
+    "properties": {
+        "displayName": "Framework — HIPAA",
+        "description": "Controls mapped to the HIPAA Security Rule. Covers access control (MFA), encryption at rest (TDE, HTTPS), audit controls (Activity Log), and availability (VM backup).",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Regulatory Compliance"
+        },
+        "parameters": {
+            "mfaEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "tdeEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "storageEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Deny", "Disabled" ]
+            },
+            "identityEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Disabled" ]
+            },
+            "backupEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            }
+        },
+        "policyDefinitions": [
+            {
+                "policyDefinitionReferenceId": "requireMfaPrivilegedRoles",
+                "policyDefinitionName": "sp-require-mfa-privileged-roles",
+                "parameters": { "effect": { "value": "[parameters('mfaEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireSqlTde",
+                "policyDefinitionName": "sp-require-sql-tde",
+                "parameters": { "effect": { "value": "[parameters('tdeEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireHttpsStorage",
+                "policyDefinitionName": "sp-require-https-storage-accounts",
+                "parameters": { "effect": { "value": "[parameters('storageEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "noCustomOwnerRoles",
+                "policyDefinitionName": "sp-no-custom-subscription-owner-roles",
+                "parameters": { "effect": { "value": "[parameters('identityEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireVmBackup",
+                "policyDefinitionName": "sp-require-vm-backup",
+                "parameters": { "effect": { "value": "[parameters('backupEffect')]" } }
+            }
+        ]
+    }
+}

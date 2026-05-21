@@ -1,0 +1,49 @@
+{
+    "name": "sp-require-sql-tde",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Audit SQL databases without Transparent Data Encryption",
+        "description": "Transparent Data Encryption (TDE) must be enabled on all SQL databases (except master) to protect data at rest.",
+        "mode": "Indexed",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "SQL",
+            "pacMetadata": {
+                "industry": [ "finance", "healthcare" ],
+                "frameworks": [ "pci-dss-4.0", "hipaa", "iso-27001" ],
+                "severity": "high",
+                "references": [
+                    "https://learn.microsoft.com/azure/azure-sql/database/transparent-data-encryption-tde-overview",
+                    "https://www.pcisecuritystandards.org"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect" },
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ],
+                "defaultValue": "AuditIfNotExists"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    { "field": "type", "equals": "Microsoft.Sql/servers/databases" },
+                    { "field": "name", "notEquals": "master" }
+                ]
+            },
+            "then": {
+                "effect": "[parameters('effect')]",
+                "details": {
+                    "type": "Microsoft.Sql/servers/databases/transparentDataEncryption",
+                    "name": "current",
+                    "existenceCondition": {
+                        "field": "Microsoft.Sql/transparentDataEncryption.status",
+                        "equals": "Enabled"
+                    }
+                }
+            }
+        }
+    }
+}

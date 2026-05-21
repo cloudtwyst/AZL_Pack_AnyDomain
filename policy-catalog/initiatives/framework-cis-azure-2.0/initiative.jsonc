@@ -1,0 +1,76 @@
+{
+    "name": "framework-cis-azure-2-0",
+    "type": "Microsoft.Authorization/policySetDefinitions",
+    "properties": {
+        "displayName": "Framework — CIS Azure Foundations Benchmark 2.0",
+        "description": "Controls mapped to the CIS Microsoft Azure Foundations Benchmark v2.0. Covers identity, network security, logging, and VM hardening.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Regulatory Compliance"
+        },
+        "parameters": {
+            "identityEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Disabled" ]
+            },
+            "mfaEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "networkEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Deny", "Disabled" ]
+            },
+            "nsgEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "taggingEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Deny", "Disabled" ]
+            },
+            "activityLogEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            }
+        },
+        "policyDefinitions": [
+            {
+                "policyDefinitionReferenceId": "noCustomOwnerRoles",
+                "policyDefinitionName": "sp-no-custom-subscription-owner-roles",
+                "parameters": { "effect": { "value": "[parameters('identityEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireMfaPrivilegedRoles",
+                "policyDefinitionName": "sp-require-mfa-privileged-roles",
+                "parameters": { "effect": { "value": "[parameters('mfaEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "noPublicIpOnVms",
+                "policyDefinitionName": "sp-no-public-ip-on-vms",
+                "parameters": { "effect": { "value": "[parameters('networkEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireNsgOnSubnets",
+                "policyDefinitionName": "sp-require-nsg-on-subnets",
+                "parameters": { "effect": { "value": "[parameters('nsgEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireMandatoryTags",
+                "policyDefinitionName": "sp-require-mandatory-tags",
+                "parameters": { "effect": { "value": "[parameters('taggingEffect')]" } }
+            },
+            {
+                "policyDefinitionReferenceId": "requireActivityLogDiag",
+                "policyDefinitionName": "sp-require-activity-log-diag",
+                "parameters": { "effect": { "value": "[parameters('activityLogEffect')]" } }
+            }
+        ]
+    }
+}

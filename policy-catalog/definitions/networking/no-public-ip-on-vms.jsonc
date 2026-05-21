@@ -1,0 +1,47 @@
+{
+    "name": "sp-no-public-ip-on-vms",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Audit or deny public IP addresses associated with VM NICs",
+        "description": "Virtual machine network interfaces should not have public IP addresses directly attached. Use a load balancer or Azure Bastion for inbound access.",
+        "mode": "Indexed",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Network",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "cis-azure-2.0", "nist-800-53" ],
+                "severity": "high",
+                "references": [
+                    "https://www.cisecurity.org/benchmark/azure",
+                    "https://learn.microsoft.com/azure/security/fundamentals/network-best-practices"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect" },
+                "allowedValues": [ "Audit", "Deny", "Disabled" ],
+                "defaultValue": "Audit"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Network/networkInterfaces"
+                    },
+                    {
+                        "field": "Microsoft.Network/networkInterfaces/ipconfigurations[*].publicIpAddress.id",
+                        "exists": true
+                    }
+                ]
+            },
+            "then": {
+                "effect": "[parameters('effect')]"
+            }
+        }
+    }
+}

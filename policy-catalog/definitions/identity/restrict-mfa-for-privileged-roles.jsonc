@@ -1,0 +1,47 @@
+{
+    "name": "sp-require-mfa-privileged-roles",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Require MFA for accounts with privileged roles",
+        "description": "Audits subscriptions where the Defender for Cloud MFA assessment reports that privileged role members do not have MFA enabled.",
+        "mode": "All",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Identity",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "hipaa", "pci-dss-4.0", "cis-azure-2.0" ],
+                "severity": "critical",
+                "references": [
+                    "https://www.cisecurity.org/benchmark/azure",
+                    "https://learn.microsoft.com/azure/defender-for-cloud/recommendations-reference"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect" },
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ],
+                "defaultValue": "AuditIfNotExists"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "field": "type",
+                "equals": "Microsoft.Resources/subscriptions"
+            },
+            "then": {
+                "effect": "[parameters('effect')]",
+                "details": {
+                    "type": "Microsoft.Security/assessments",
+                    "name": "94290b00-4d0c-d7b4-7cea-064a9554e681",
+                    "existenceCondition": {
+                        "field": "Microsoft.Security/assessments/status.code",
+                        "equals": "Healthy"
+                    }
+                }
+            }
+        }
+    }
+}

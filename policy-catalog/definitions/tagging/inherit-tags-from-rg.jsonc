@@ -1,0 +1,53 @@
+{
+    "name": "sp-inherit-tag-from-rg",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Inherit a tag from the resource group if missing",
+        "description": "Adds or replaces the specified tag with the value from the parent resource group when any resource is created or updated. Existing resources can be remediated by triggering a remediation task.",
+        "mode": "Indexed",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Tags",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "azure-security-benchmark" ],
+                "severity": "low",
+                "references": [
+                    "https://learn.microsoft.com/azure/governance/policy/samples/inherit-tag-resource-group"
+                ]
+            }
+        },
+        "parameters": {
+            "tagName": {
+                "type": "String",
+                "metadata": {
+                    "displayName": "Tag name",
+                    "description": "Name of the tag to inherit from the resource group."
+                }
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    { "field": "[concat('tags[', parameters('tagName'), ']')]", "notEquals": "[resourceGroup().tags[parameters('tagName')]]" },
+                    { "value": "[resourceGroup().tags[parameters('tagName')]]", "notEquals": "" }
+                ]
+            },
+            "then": {
+                "effect": "Modify",
+                "details": {
+                    "roleDefinitionIds": [
+                        "/providers/microsoft.authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
+                    ],
+                    "operations": [
+                        {
+                            "operation": "addOrReplace",
+                            "field": "[concat('tags[', parameters('tagName'), ']')]",
+                            "value": "[resourceGroup().tags[parameters('tagName')]]"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

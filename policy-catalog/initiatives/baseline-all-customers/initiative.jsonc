@@ -1,0 +1,92 @@
+{
+    "name": "baseline-all-customers",
+    "type": "Microsoft.Authorization/policySetDefinitions",
+    "properties": {
+        "displayName": "Baseline — All Customers",
+        "description": "Core controls assigned to every customer regardless of industry. Covers mandatory tagging, diagnostic settings, activity log monitoring, identity hygiene, and HTTPS-only storage.",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "General"
+        },
+        "parameters": {
+            "logAnalyticsWorkspaceId": {
+                "type": "String",
+                "metadata": { "displayName": "Log Analytics workspace resource ID" }
+            },
+            "eventHubAuthorizationRuleId": {
+                "type": "String",
+                "metadata": { "displayName": "Event Hub authorisation rule resource ID" }
+            },
+            "eventHubName": {
+                "type": "String",
+                "metadata": { "displayName": "Event Hub name" },
+                "defaultValue": "diagnostics"
+            },
+            "diagEffect": {
+                "type": "String",
+                "defaultValue": "DeployIfNotExists",
+                "allowedValues": [ "DeployIfNotExists", "Disabled" ]
+            },
+            "taggingEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Deny", "Disabled" ]
+            },
+            "activityLogEffect": {
+                "type": "String",
+                "defaultValue": "AuditIfNotExists",
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ]
+            },
+            "identityEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Disabled" ]
+            },
+            "storageEffect": {
+                "type": "String",
+                "defaultValue": "Audit",
+                "allowedValues": [ "Audit", "Deny", "Disabled" ]
+            }
+        },
+        "policyDefinitions": [
+            {
+                "policyDefinitionReferenceId": "deployDiagSettingsToLawEh",
+                "policyDefinitionName": "sp-diag-settings-deploy-to-law-eh",
+                "parameters": {
+                    "effect": { "value": "[parameters('diagEffect')]" },
+                    "logAnalyticsWorkspaceId": { "value": "[parameters('logAnalyticsWorkspaceId')]" },
+                    "eventHubAuthorizationRuleId": { "value": "[parameters('eventHubAuthorizationRuleId')]" },
+                    "eventHubName": { "value": "[parameters('eventHubName')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "requireActivityLogDiag",
+                "policyDefinitionName": "sp-require-activity-log-diag",
+                "parameters": {
+                    "effect": { "value": "[parameters('activityLogEffect')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "requireMandatoryTags",
+                "policyDefinitionName": "sp-require-mandatory-tags",
+                "parameters": {
+                    "effect": { "value": "[parameters('taggingEffect')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "noCustomOwnerRoles",
+                "policyDefinitionName": "sp-no-custom-subscription-owner-roles",
+                "parameters": {
+                    "effect": { "value": "[parameters('identityEffect')]" }
+                }
+            },
+            {
+                "policyDefinitionReferenceId": "requireHttpsStorage",
+                "policyDefinitionName": "sp-require-https-storage-accounts",
+                "parameters": {
+                    "effect": { "value": "[parameters('storageEffect')]" }
+                }
+            }
+        ]
+    }
+}

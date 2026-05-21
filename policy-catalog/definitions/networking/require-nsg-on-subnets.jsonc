@@ -1,0 +1,54 @@
+{
+    "name": "sp-require-nsg-on-subnets",
+    "type": "Microsoft.Authorization/policyDefinitions",
+    "properties": {
+        "displayName": "Audit subnets without a Network Security Group",
+        "description": "Every subnet (except gateway, firewall, and Bastion subnets) should have a Network Security Group attached to restrict traffic.",
+        "mode": "Indexed",
+        "metadata": {
+            "version": "1.0.0",
+            "category": "Network",
+            "pacMetadata": {
+                "industry": [ "all" ],
+                "frameworks": [ "cis-azure-2.0", "nist-800-53" ],
+                "severity": "medium",
+                "references": [
+                    "https://www.cisecurity.org/benchmark/azure",
+                    "https://learn.microsoft.com/azure/virtual-network/network-security-groups-overview"
+                ]
+            }
+        },
+        "parameters": {
+            "effect": {
+                "type": "String",
+                "metadata": { "displayName": "Effect" },
+                "allowedValues": [ "AuditIfNotExists", "Disabled" ],
+                "defaultValue": "AuditIfNotExists"
+            }
+        },
+        "policyRule": {
+            "if": {
+                "allOf": [
+                    {
+                        "field": "type",
+                        "equals": "Microsoft.Network/virtualNetworks/subnets"
+                    },
+                    {
+                        "field": "name",
+                        "notIn": [ "GatewaySubnet", "AzureFirewallSubnet", "AzureFirewallManagementSubnet", "AzureBastionSubnet" ]
+                    }
+                ]
+            },
+            "then": {
+                "effect": "[parameters('effect')]",
+                "details": {
+                    "type": "Microsoft.Network/networkSecurityGroups",
+                    "existenceCondition": {
+                        "field": "Microsoft.Network/virtualNetworks/subnets/networkSecurityGroup.id",
+                        "exists": true
+                    }
+                }
+            }
+        }
+    }
+}
