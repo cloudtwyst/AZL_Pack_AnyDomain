@@ -1,0 +1,95 @@
+# Security Baseline per Service — {{CUSTOMER_NAME}}
+
+> Baseline controls enforced by policy in the `{{SHORT_CODE}}` tenant.
+> Consult `approved-patterns.md` for deployment patterns.
+
+**Pack version:** {{PACK_VERSION}} | **Last rendered:** {{RENDER_DATE}}
+
+---
+
+## How to read this document
+
+Each section covers one Azure service area. Controls marked **Policy** are
+enforced automatically. Controls marked **Recommended** are expected but not
+yet policy-enforced.
+
+---
+
+## Compute — Virtual Machines
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| No public IP on NIC | Policy (Audit/Deny) | `sp-no-public-ip-on-vms` |
+| NSG on every subnet | Policy (AuditIfNotExists) | `sp-require-nsg-on-subnets` |
+| Recovery Services backup | Policy (AuditIfNotExists) | `sp-require-vm-backup` |
+| Only approved extensions | Policy (Audit) | `sp-require-approved-vm-extensions` |
+| Patch management via Update Manager | Recommended | — |
+| Anti-malware extension | Recommended | — |
+
+## Storage
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| HTTPS-only (`supportsHttpsTrafficOnly`) | Policy (Audit/Deny) | `sp-require-https-storage-accounts` |
+| No public access (blob) | Recommended | — |
+| Soft delete for blobs | Recommended | — |
+| Diagnostic settings to LAW | Policy (DINE) | `sp-diag-settings-deploy-to-law-eh` |
+
+## SQL Database
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| Transparent Data Encryption | Policy (AuditIfNotExists) | `sp-require-sql-tde` |
+| Azure AD authentication | Recommended | — |
+| Auditing to LAW | Recommended | — |
+| Diagnostic settings to LAW | Policy (DINE) | `sp-diag-settings-deploy-to-law-eh` |
+
+## Key Vault
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| Soft delete enabled | Recommended | — |
+| Purge protection | Recommended | — |
+| Diagnostic settings to LAW | Policy (DINE) | `sp-diag-settings-deploy-to-law-eh` |
+
+## Networking
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| NSG on subnets | Policy (AuditIfNotExists) | `sp-require-nsg-on-subnets` |
+| No public IP on VMs | Policy (Audit/Deny) | `sp-no-public-ip-on-vms` |
+| Diagnostic settings to LAW | Policy (DINE) | `sp-diag-settings-deploy-to-law-eh` |
+
+## Identity
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| No custom subscription-owner roles | Policy (Audit) | `sp-no-custom-subscription-owner-roles` |
+| MFA for privileged roles | Policy (AuditIfNotExists) | `sp-restrict-mfa-for-privileged-roles` |
+| PIM for privileged roles | Recommended | — |
+
+## Monitoring
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| Activity log diagnostic settings | Policy (AuditIfNotExists) | `sp-require-activity-log-diag` |
+| Resource diagnostic settings | Policy (DINE) | `sp-diag-settings-deploy-to-law-eh` |
+| Microsoft Defender for Cloud | Recommended | — |
+
+## Tagging
+
+| Control | Enforcement | Policy name |
+|---------|------------|------------|
+| Mandatory tags on RGs (`Environment`, `Owner`, `CostCenter`) | Policy (Audit/Deny) | `sp-require-mandatory-tags` |
+| Tag inheritance from RG | Policy (Modify) | `sp-inherit-tags-from-rg` |
+
+---
+
+## Log Analytics workspace
+
+All diagnostic settings send to:
+
+- **Workspace:** `{{SHORT_CODE}}-law-prod` in `{{PRIMARY_REGION}}`
+- **Retention:** 90 days hot, 365 days cold (archive tier)
+
+SIEM: **{{SIEM}}**

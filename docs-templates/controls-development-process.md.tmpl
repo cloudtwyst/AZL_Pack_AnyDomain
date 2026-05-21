@@ -1,0 +1,123 @@
+# Controls Development Process — {{CUSTOMER_NAME}}
+
+> This document describes how security controls are proposed, reviewed, and
+> shipped in the `{{SHORT_CODE}}` Azure tenant.
+
+**Pack version:** {{PACK_VERSION}} | **Last rendered:** {{RENDER_DATE}}
+
+---
+
+## Overview
+
+All policy controls follow a **propose → review → test → deploy** lifecycle.
+No control reaches production without passing through epac-dev and a pull request.
+
+```
+Feature branch
+     │
+     ▼
+epac-dev (sandbox MG)       ← automated deploy on push
+     │
+     ▼
+Pull Request review          ← InfoSec + platform team sign-off
+     │
+     ▼
+main branch merge
+     │
+     ├──▶ epac-nonprod (landingzones/corp MG)   ← automated deploy
+     │
+     └──▶ epac-prod (root MG)                   ← environment gate; manual approval
+```
+
+---
+
+## Step 1 — Proposing a control
+
+Raise a GitHub issue in `{{GITHUB_ORG}}/{{GITHUB_REPO}}` using the
+**Policy Control Proposal** template. Include:
+
+- **Problem statement**: what risk does this control address?
+- **Policy effect**: `Audit`, `AuditIfNotExists`, `Deny`, or `DeployIfNotExists`.
+- **Scope**: which management group(s)?
+- **Exemptions**: are any subscriptions or resource groups excluded?
+- **Framework mapping**: which compliance framework(s) does this satisfy?
+
+---
+
+## Step 2 — Design review
+
+The InfoSec team ({{INFOSEC_REVIEWERS}}) reviews the proposal within 5 business days.
+A design review meeting is required for `Deny` and `DeployIfNotExists` effects.
+
+Outcome: approved (proceed to implementation) or deferred (back to proposal).
+
+---
+
+## Step 3 — Implementation
+
+1. Create a feature branch from `main`.
+2. Write the policy JSONC under `Definitions/policyDefinitions/` (if custom) or
+   reference an existing built-in.
+3. Add or update an initiative under `Definitions/policySetDefinitions/`.
+4. Update the assignment under `Definitions/policyAssignments/root-baseline.jsonc`.
+5. Run EPAC locally to validate syntax:
+   ```pwsh
+   Build-DeploymentPlans.ps1 -PacEnvironmentSelector epac-dev `
+     -DefinitionsRootFolder ./Definitions -OutputFolder ./Output
+   ```
+
+---
+
+## Step 4 — Dev deployment and testing
+
+Push your branch. The `epac-dev.yml` workflow automatically deploys to the
+sandbox management group. Verify:
+
+- The plan output shows only expected changes.
+- No unintended resources are flagged as non-compliant.
+- `Deny` effects don't block legitimate workloads.
+
+---
+
+## Step 5 — Pull request
+
+Raise a PR targeting `main`. Required reviewers:
+
+- At least one member of {{INFOSEC_REVIEWERS}}.
+- At least one member of the platform team.
+
+The PR template includes a compliance checklist — complete it before requesting review.
+
+---
+
+## Step 6 — Production deployment
+
+Merging to `main` triggers:
+
+1. `epac-nonprod.yml` — deploys to `landingzones/corp` MG automatically.
+2. `epac-prod.yml` — opens a deployment gate requiring manual approval from
+   {{INFOSEC_REVIEWERS}} before deploying to the root MG.
+
+---
+
+## Compliance framework mappings
+
+| Framework | Initiative file | Owner |
+|-----------|----------------|-------|
+| Baseline (all) | `policySetDefinitions/baseline-all-customers.jsonc` | Platform team |
+| HIPAA | `policySetDefinitions/framework-hipaa.jsonc` | InfoSec |
+| CIS Azure 2.0 | `policySetDefinitions/framework-cis-azure-2.0.jsonc` | InfoSec |
+| ISO 27001 | `policySetDefinitions/framework-iso-27001.jsonc` | InfoSec |
+
+---
+
+## Exemption process
+
+Exemptions are defined in `customer-config.yaml` under
+`policy.initiatives.exclusions`. Each exemption requires:
+
+- A scope (management group, subscription, or resource group resource ID).
+- A written reason.
+- Approval from {{INFOSEC_REVIEWERS}} via PR.
+
+Exemptions are reviewed annually.

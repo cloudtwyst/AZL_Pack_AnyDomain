@@ -1,0 +1,83 @@
+# Rendered by solpack from workflow-templates/epac-nonprod.yml.tmpl
+# Re-run 'solpack render' to regenerate from customer-config.yaml.
+name: EPAC — Non-prod plan + deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "Definitions/**"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-plan:
+    name: Build deployment plans (epac-nonprod)
+    runs-on: ubuntu-latest
+    environment: epac-nonprod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.EPAC_BUILD_CLIENT_ID }}
+          tenant-id: {{TENANT_ID}}
+          subscription-id: ${{ secrets.MGMT_SUBSCRIPTION_ID }}
+
+      - name: Install EPAC
+        shell: pwsh
+        run: Install-Module EnterprisePolicyAsCode -Force -Scope CurrentUser
+
+      - name: Build deployment plans
+        shell: pwsh
+        run: |
+          Build-DeploymentPlans.ps1 `
+            -PacEnvironmentSelector epac-nonprod `
+            -DefinitionsRootFolder ./Definitions `
+            -OutputFolder ./Output
+
+      - name: Upload plan artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: epac-nonprod-plan
+          path: Output/
+          retention-days: 7
+
+  deploy:
+    name: Deploy to epac-nonprod
+    runs-on: ubuntu-latest
+    needs: build-plan
+    environment: epac-nonprod
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download plan artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: epac-nonprod-plan
+          path: Output/
+
+      - name: Azure login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.EPAC_DEPLOY_CLIENT_ID }}
+          tenant-id: {{TENANT_ID}}
+          subscription-id: ${{ secrets.MGMT_SUBSCRIPTION_ID }}
+
+      - name: Install EPAC
+        shell: pwsh
+        run: Install-Module EnterprisePolicyAsCode -Force -Scope CurrentUser
+
+      - name: Deploy policy plan
+        shell: pwsh
+        run: Deploy-PolicyPlan.ps1 -PacEnvironmentSelector epac-nonprod -InputFolder ./Output
+
+      - name: Deploy roles plan
+        shell: pwsh
+        run: Deploy-RolesPlan.ps1 -PacEnvironmentSelector epac-nonprod -InputFolder ./Output

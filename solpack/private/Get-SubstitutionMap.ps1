@@ -26,6 +26,7 @@ function Get-SubstitutionMap {
     $m  = $Config['monitoring']
     $p  = $Config['policy']
     $lc = $Config['lifecycle']
+    $ho = $Config['handover']
 
     $rootPrefix = $az['managementGroups']['rootPrefix']
 
@@ -38,6 +39,7 @@ function Get-SubstitutionMap {
         # Customer
         CUSTOMER_NAME       = $c['name']
         CUSTOMER_SHORT_CODE = $c['shortCode']
+        SHORT_CODE          = $c['shortCode']
         CUSTOMER_INDUSTRY   = $c['industry']
         PRIMARY_CONTACT     = $c['primaryContact']
 
@@ -79,9 +81,13 @@ function Get-SubstitutionMap {
         LOG_ANALYTICS_WORKSPACE_ID   = '# TODO: set after terraform apply (monitoring-backbone output)'
         EVENT_HUB_AUTH_RULE_ID       = '# TODO: set after terraform apply (monitoring-backbone output)'
 
+        # Lifecycle
+        INFOSEC_REVIEWERS    = (($lc['infosecReviewers'] ?? @()) -join ', ')
+
         # Misc
-        PACK_VERSION = '0.1.0'
+        PACK_VERSION   = '0.1.0'
         SCHEMA_VERSION = $Config['schemaVersion']
+        RENDER_DATE    = (Get-Date -Format 'yyyy-MM-dd')
     }
 
     return $map

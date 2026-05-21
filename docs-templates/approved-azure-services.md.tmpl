@@ -1,0 +1,80 @@
+# Approved Azure Services — {{CUSTOMER_NAME}}
+
+> This document is maintained by the InfoSec team.
+> Changes require a pull request reviewed by {{INFOSEC_REVIEWERS}}.
+
+**Pack version:** {{PACK_VERSION}} | **Last rendered:** {{RENDER_DATE}}
+
+---
+
+## How to use this list
+
+Services listed here are **approved for use** in the `{{SHORT_CODE}}` Azure tenant.
+Using a service not on this list requires a service request (see `service-request-issue.md`).
+
+The **Tier** column indicates the level of review applied:
+
+| Tier | Meaning |
+|------|---------|
+| 1 — Core | Pre-approved; no service request needed |
+| 2 — Approved | Listed after InfoSec review; standard onboarding applies |
+| 3 — Conditional | Approved with constraints; read the notes column |
+
+---
+
+## Compute
+
+| Service | Tier | Notes |
+|---------|------|-------|
+| Azure Virtual Machines | 1 | Approved VM extensions list: `approved-patterns.md` |
+| Azure Kubernetes Service | 2 | Requires private cluster + Azure CNI |
+| Azure App Service | 2 | HTTPS-only enforced by policy |
+| Azure Functions | 2 | Consumption or Elastic Premium only |
+| Azure Container Instances | 3 | No persistent volumes; dev/test only |
+
+## Storage & data
+
+| Service | Tier | Notes |
+|---------|------|-------|
+| Azure Blob Storage | 1 | Secure transfer required (enforced by policy) |
+| Azure SQL Database | 1 | TDE required (enforced by policy) |
+| Azure Key Vault | 1 | Soft delete + purge protection required |
+| Azure Cosmos DB | 2 | Requires private endpoint |
+| Azure Data Lake Storage Gen2 | 2 | Requires hierarchical namespace |
+| Azure Cache for Redis | 3 | Non-TLS port must be disabled |
+
+## Networking
+
+| Service | Tier | Notes |
+|---------|------|-------|
+| Azure Virtual Network | 1 | NSG required on every subnet (enforced by policy) |
+| Azure Firewall | 1 | — |
+| Azure Bastion | 1 | Only approved remote access method for VMs |
+| Azure Application Gateway | 2 | WAF policy required |
+| Azure Front Door | 2 | WAF policy required |
+| Azure VPN Gateway | 3 | Requires InfoSec sign-off per deployment |
+
+## Identity & security
+
+| Service | Tier | Notes |
+|---------|------|-------|
+| Microsoft Entra ID | 1 | — |
+| Microsoft Defender for Cloud | 1 | — |
+| Microsoft Sentinel | 1 | Enabled in this tenant |
+| Azure Monitor | 1 | — |
+
+## Integration
+
+| Service | Tier | Notes |
+|---------|------|-------|
+| Azure Service Bus | 2 | Private endpoint preferred |
+| Azure Event Grid | 2 | — |
+| Azure API Management | 2 | External-facing APIs only via APIM |
+| Azure Logic Apps | 3 | Standard tier only; consumption requires review |
+
+---
+
+## Requesting a new service
+
+Raise a GitHub issue using the **Service Request** template in this repository.
+The InfoSec team will review within 5 business days.

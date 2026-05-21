@@ -1,0 +1,84 @@
+# Handover Runbook — {{CUSTOMER_NAME}}
+
+**Tenant ID:** {{TENANT_ID}}
+**Primary region:** {{PRIMARY_REGION}}
+**Short code:** {{SHORT_CODE}}
+**Pack version:** {{PACK_VERSION}}
+**Generated:** {{RENDER_DATE}}
+
+---
+
+## Day-2 operations
+
+### Updating policy assignments
+
+1. Clone `{{GITHUB_REPO}}` from the `{{GITHUB_ORG}}` organisation.
+2. Create a feature branch: `git checkout -b policy/your-change`.
+3. Edit files under `Definitions/policyAssignments/`.
+4. Run the EPAC plan against dev:
+   ```pwsh
+   Build-DeploymentPlans.ps1 -PacEnvironmentSelector epac-dev -DefinitionsRootFolder ./Definitions -OutputFolder ./Output
+   ```
+5. Review `Output/` and raise a pull request.
+6. Merging to `main` triggers the non-prod and prod pipelines automatically.
+
+### Upgrading the solution pack
+
+1. Update `packVersion` in `customer-config.yaml` to the new constraint.
+2. Run `solpack render` to regenerate all artifacts.
+3. Review the diff — pay attention to `Definitions/` and `.github/workflows/`.
+4. Raise a PR and follow the normal review process.
+
+### Adding or removing a policy framework
+
+1. Update the `policy.initiatives.frameworks` list in `customer-config.yaml`.
+2. Run `solpack render`.
+3. New JSONC files appear in `Definitions/policyDefinitions/` and
+   `Definitions/policySetDefinitions/`; removed files are left in place
+   (delete them manually if desired).
+4. Raise a PR.
+
+### Terraform state
+
+| Item | Value |
+|------|-------|
+| Resource group | `{{SHORT_CODE}}-rg-tfstate` |
+| Storage account | `{{SHORT_CODE}}tfstate` |
+| Container | `tfstate` |
+| State key | `foundation.tfstate` |
+
+To re-run Terraform:
+
+```bash
+cd terraform/
+terraform init
+terraform plan -var-file=terraform.tfvars
+terraform apply -var-file=terraform.tfvars
+```
+
+### Rotating service principal secrets
+
+This pack uses **OIDC federation** — there are no client secrets to rotate.
+Federated credentials are scoped to specific GitHub environments (`epac-dev`,
+`epac-nonprod`, `epac-prod`). If credentials need to be regenerated:
+
+1. Delete the federated identity credential in Entra ID (or via Terraform).
+2. Run `terraform apply` to recreate it.
+3. No GitHub secret values need to change.
+
+---
+
+## Escalation contacts
+
+| Role | Contact |
+|------|---------|
+| Primary contact | {{PRIMARY_CONTACT}} |
+| Pack maintainer | See `SOLUTION-PACK.md` |
+
+---
+
+## Reference
+
+- [Enterprise Policy as Code (EPAC)](https://azure.github.io/enterprise-policy-as-code/)
+- [Azure CAF Management Group hierarchy](https://learn.microsoft.com/azure/cloud-adoption-framework/ready/landing-zone/design-area/resource-org-management-groups)
+- `CLAUDE.md` in this repository — Claude Code brief for AI-assisted development

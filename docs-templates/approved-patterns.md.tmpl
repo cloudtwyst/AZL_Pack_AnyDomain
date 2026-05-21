@@ -1,0 +1,82 @@
+# Approved Patterns — {{CUSTOMER_NAME}}
+
+> Patterns describe the standard, reviewed way to use Azure services in this tenant.
+> Deviations require a pull request reviewed by {{INFOSEC_REVIEWERS}}.
+
+**Pack version:** {{PACK_VERSION}} | **Last rendered:** {{RENDER_DATE}}
+
+---
+
+## Virtual machine deployment
+
+**Required pattern:** All VMs must be deployed:
+
+- Into a subnet covered by an NSG (enforced by `require-nsg-on-subnets` policy).
+- Without a public IP address (enforced by `no-public-ip-on-vms` policy).
+- Accessed only via Azure Bastion.
+- With a Recovery Services backup policy attached (enforced by `require-vm-backup` policy).
+
+**Approved VM extensions:**
+
+| Extension | Publisher | Purpose |
+|-----------|-----------|---------|
+| MicrosoftMonitoringAgent | Microsoft.EnterpriseCloud.Monitoring | Log Analytics agent |
+| AzureMonitorWindowsAgent | Microsoft.Azure.Monitor | Azure Monitor agent (Windows) |
+| AzureMonitorLinuxAgent | Microsoft.Azure.Monitor | Azure Monitor agent (Linux) |
+| DependencyAgentWindows | Microsoft.Azure.Monitoring.DependencyAgent | Service map (Windows) |
+| DependencyAgentLinux | Microsoft.Azure.Monitoring.DependencyAgent | Service map (Linux) |
+
+Any other extension requires InfoSec approval and addition to this list before deployment.
+
+---
+
+## Storage account provisioning
+
+Every storage account must:
+
+1. Have `supportsHttpsTrafficOnly = true` (enforced by policy).
+2. Use a private endpoint for production workloads.
+3. Disable public network access where not explicitly needed.
+4. Use customer-managed keys (CMK) for regulated data classifications.
+
+---
+
+## Key Vault usage
+
+- One Key Vault per workload (not shared across teams).
+- Soft delete enabled with a 90-day retention period.
+- Purge protection enabled.
+- RBAC authorization model (not access policies).
+- Diagnostic settings to Log Analytics enabled.
+
+---
+
+## SQL Database / Managed Instance
+
+- TDE enabled with platform-managed keys (minimum); CMK for regulated data.
+- Azure AD authentication required; SQL authentication disabled for production.
+- Private endpoint required for production databases.
+- Auditing to Log Analytics workspace enabled.
+
+---
+
+## Networking
+
+- Every subnet (except GatewaySubnet, AzureFirewallSubnet, AzureBastionSubnet) requires an NSG.
+- NSG flow logs enabled and sent to Log Analytics.
+- No hub-bypass peerings without network team approval.
+- All internet-facing endpoints must go through Azure Firewall or Application Gateway with WAF.
+
+---
+
+## Tagging
+
+All resource groups must carry the following tags (enforced by `require-mandatory-tags` policy):
+
+| Tag | Format | Example |
+|-----|--------|---------|
+| `Environment` | `dev` \| `nonprod` \| `prod` | `prod` |
+| `Owner` | Email or Entra group UPN | `ops@{{CUSTOMER_NAME}}.com` |
+| `CostCenter` | Finance cost-centre code | `CC-12345` |
+
+Resource-level tags are inherited from the parent resource group via the `inherit-tags-from-rg` policy.

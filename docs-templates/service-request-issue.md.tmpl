@@ -1,0 +1,74 @@
+---
+name: Azure Service Request
+about: Request approval to use an Azure service not on the approved list
+title: "[Service Request] <Service name>"
+labels: service-request, infosec-review
+assignees: ""
+---
+
+<!-- Rendered by solpack from docs-templates/service-request-issue.md.tmpl -->
+<!-- Customer: {{CUSTOMER_NAME}} | Pack: {{PACK_VERSION}} -->
+
+## Service details
+
+**Azure service name:**
+<!-- e.g. Azure Cognitive Services -->
+
+**Resource provider:**
+<!-- e.g. Microsoft.CognitiveServices -->
+
+**Proposed tier:**
+<!-- Tier 1 (Core) | Tier 2 (Approved) | Tier 3 (Conditional) -->
+
+---
+
+## Business justification
+
+**What workload requires this service?**
+
+**Why can't an already-approved service meet the requirement?**
+
+---
+
+## Security assessment
+
+**Data classification of data that will flow through or rest in this service:**
+<!-- Public | Internal | Confidential | Restricted -->
+
+**Network exposure:**
+- [ ] Private endpoint only
+- [ ] Service endpoint only
+- [ ] Public endpoint (explain below)
+
+**Authentication mechanism:**
+<!-- Managed identity | AAD token | API key | other -->
+
+**Logging and monitoring:**
+- [ ] Diagnostic settings to Log Analytics will be configured
+- [ ] Alerts will be set up for relevant metrics
+
+**Known constraints or conditions on use:**
+
+---
+
+## Compliance
+
+**Does this service appear in the CIS Azure 2.0 benchmark?**
+- [ ] Yes — controls applied: <!-- list control IDs -->
+- [ ] No
+- [ ] Unknown
+
+**Applicable frameworks in scope for {{CUSTOMER_NAME}}:**
+<!-- Check all that apply -->
+
+---
+
+## Review
+
+/cc {{INFOSEC_REVIEWERS}}
+
+InfoSec team: please review within 5 business days and:
+- Approve (add to `approved-azure-services.md` and `approved-patterns.md`)
+- Approve with conditions (document in the notes column)
+- Defer (add to backlog with reason)
+- Reject (close with reason)

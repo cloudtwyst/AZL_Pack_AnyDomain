@@ -1,0 +1,48 @@
+# Rendered by solpack from workflow-templates/sync-upstream.yml.tmpl
+# Re-run 'solpack render' to regenerate from customer-config.yaml.
+name: Sync upstream EPAC
+
+on:
+  schedule:
+    # Weekly on Monday 06:00 UTC
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  sync:
+    name: Sync upstream EPAC fork
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install EPAC
+        shell: pwsh
+        run: Install-Module EnterprisePolicyAsCode -Force -Scope CurrentUser
+
+      - name: Sync upstream
+        shell: pwsh
+        run: |
+          # Sync-Repo.ps1 is provided by the EPAC module.
+          # It opens a PR on this repo when upstream changes exist.
+          Sync-Repo.ps1 -UpstreamRepoUrl "https://github.com/Azure/enterprise-policy-as-code.git" `
+                        -BranchName "sync/epac-upstream-$(Get-Date -Format 'yyyyMMdd')"
+
+      - name: Create pull request (if changes)
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: sync/epac-upstream-${{ github.run_id }}
+          title: "chore: sync upstream EPAC changes"
+          body: |
+            Automated sync of upstream EPAC changes.
+
+            Review the diff carefully before merging — upstream changes may
+            require corresponding updates to `Definitions/` and `customer-config.yaml`.
+          labels: upstream-sync,automated
