@@ -16,15 +16,17 @@ Format: `## D{N} — {title}` then Status, Date, Decision, Reason.
 
 ## D2 — IaC language for foundation modules
 
-- **Status:** Open
-- **Question:** Terraform or Bicep for `terraform-modules/`?
-- **Default:** Terraform (as per SOLUTION-PACK.md). Confirm before W2 starts.
+- **Status:** Closed
+- **Date:** 2026-05-21
+- **Decision:** Terraform (azurerm ~> 4.0, azuread ~> 2.50, pinned to >= 1.6.0).
+- **Reason:** SOLUTION-PACK.md default; Terraform's provider coverage for azurerm/azuread is more complete than Bicep for the OIDC federation and RBAC resources needed by the service-principals module.
 
 ## D3 — Template engine for the CLI
 
-- **Status:** Open
-- **Question:** PowerShell `ExpandString` (simple) or pwsh-callable Mustache (loops/conditionals)?
-- **Default:** Decide during W4. SOLUTION-PACK.md recommends Mustache for anything with loops.
+- **Status:** Closed
+- **Date:** 2026-05-21
+- **Decision:** `{{PLACEHOLDER}}` string replacement via PowerShell `String.Replace()` for static tokens; PowerShell script logic for loops and conditionals (e.g. terraform/main.tf generation).
+- **Reason:** Mustache requires an external module. The current template surface is small and all loops (e.g. multi-region topologies, multiple frameworks) are handled in dedicated PowerShell functions (Build-TerraformMain, Build-EpacGlobalSettings) rather than in template files. Revisit for W5 if workflow templates need loops.
 
 ## D4 — YAML parser dependency
 
